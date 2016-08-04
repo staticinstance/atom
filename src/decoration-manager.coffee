@@ -18,6 +18,7 @@ class DecorationManager extends Model
     @layerDecorationsByMarkerLayerId = {}
     @decorationCountsByLayerId = {}
     @layerUpdateDisposablesByLayerId = {}
+    @layerDestroyDisposablesByLayerId = {}
 
   observeDecorations: (callback) ->
     callback(decoration) for decoration in @getDecorations()
@@ -144,7 +145,7 @@ class DecorationManager extends Model
     else
       delete @overlayDecorationsById[decoration.id]
 
-  didDestroyDecoration: (decoration) ->
+  didDestroyMarkerDecoration: (decoration) ->
     {marker} = decoration
     return unless decorations = @decorationsByMarkerId[marker.id]
     index = decorations.indexOf(decoration)
@@ -173,6 +174,7 @@ class DecorationManager extends Model
     @decorationCountsByLayerId[layer.id] ?= 0
     if ++@decorationCountsByLayerId[layer.id] is 1
       @layerUpdateDisposablesByLayerId[layer.id] = layer.onDidUpdate(@scheduleUpdateDecorationsEvent.bind(this))
+      @layerDestroyDisposablesByLayerId[layer.id] = layer.onDidDestroy(@scheduleUpdateDecorationsEvent.bind(this))
 
   unobserveDecoratedLayer: (layer) ->
     if --@decorationCountsByLayerId[layer.id] is 0
